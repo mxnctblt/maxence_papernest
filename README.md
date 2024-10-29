@@ -183,7 +183,7 @@ The API handles various error scenarios, including:
 
 - Please ensure that you have the necessary permissions and API access when deploying the application.
 - The CSV file processed used for network coverage data should be in the root directory as [processed_network_coverage.csv](processed_network_coverage.csv).
-- The initial CSV file can be processed using the included script to convert the coordinates from Lambert 93 to WGS84 format if necessary. [process_csv.py](.process_csv.py)
+- The initial CSV file can be processed using the included script to convert the coordinates from Lambert 93 to WGS84 format if necessary. [process_csv.py](process_csv.py)
 
 ## Author
 

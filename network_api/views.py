@@ -1,17 +1,13 @@
-from django.conf import settings
 from django.shortcuts import render
+from network_api.models import NetworkCoverage
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import logging
-import pandas as pd
 import requests
 
 # Set up logging for debugging and error tracking
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Load the pre-processed CSV file into a DataFrame
-coverage_data = pd.read_csv('processed_network_coverage.csv')
 
 # Define constants
 SCORE_THRESHOLD = 0.7
@@ -73,26 +69,25 @@ def network_coverage(request):
     coords = valid_features[0]['geometry']['coordinates']
     longitude, latitude = coords
 
-    # Initial search ranges for local precision
+    # Query the database for coverage data within specified ranges
     search_ranges = [0.01, 0.02, 0.05, 0.1]
 
     # Search for coverage data within defined ranges
     for search_range in search_ranges:
         # Filter DataFrame within the current range
-        coverage_results = coverage_data[
-            (coverage_data['longitude'].between(longitude - search_range, longitude + search_range)) &
-            (coverage_data['latitude'].between(latitude - search_range, latitude + search_range))
-        ]
+        coverage_results = NetworkCoverage.objects.filter(
+            longitude__range=(longitude - search_range, longitude + search_range),
+            latitude__range=(latitude - search_range, latitude + search_range)
+        )
 
         # If coverage data is found, format the result
-        if not coverage_results.empty:
+        if coverage_results.exists():
             result = {}
-            for _, row in coverage_results.iterrows():
-                operator = row['Operator']
-                result[operator] = {
-                    '2G': bool(row['2G']),
-                    '3G': bool(row['3G']),
-                    '4G': bool(row['4G'])
+            for coverage in coverage_results:
+                result[coverage.operator] = {
+                    '2G': coverage.g2,
+                    '3G': coverage.g3,
+                    '4G': coverage.g4
                 }
             return Response(result)
 

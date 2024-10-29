@@ -5,6 +5,7 @@
   <a href="#technologies-used">Technologies Used</a> •
   <a href="#setup-and-installation">Setup and Installation</a> •
   <a href="#api-endpoints">API Endpoints</a> •
+  <a href="#database-model">Database Model</a> •
   <a href="#testing">Testing</a> •
   <a href="#error-handling">Error Handling</a> •
   <a href="#additional-notes">Additional Notes</a> •
@@ -68,12 +69,13 @@ def lamber93_to_gps(x, y):
 
 ## Technologies Used
 
-[Python](https://www.python.org/): Programming language.
-[Django](https://www.djangoproject.com/): Web framework used for building the API.
-Django REST Framework: Toolkit for building Web APIs in Django.
-Pandas: Library used for data manipulation and analysis.
-Requests: Library for making HTTP requests to external APIs.
-[PyProj](https://pypi.org/project/pyproj/): Library for cartographic projections and coordinate transformations.
+- **[Python](https://www.python.org/)**: Programming language.
+- **[Django](https://www.djangoproject.com/)**: Web framework used for building the API.
+- **Django REST Framework**: Toolkit for building Web APIs in Django.
+- **Pandas**: Library used for data manipulation and analysis.
+- **Requests**: Library for making HTTP requests to external APIs.
+- **[PyProj](https://pypi.org/project/pyproj/)**: Library for cartographic projections and coordinate transformations.
+- **[Logging](https://docs.python.org/3/library/logging.html)**: Built-in Python module used for tracking events, errors, and debug information in the application.
 
 ## Setup and Installation
 
@@ -142,7 +144,7 @@ GET http://127.0.0.1:8000/api/coverage/?q=42+Rue+Pétion+75011+Paris
 {
     "orange": {"2G": true, "3G": true, "4G": true},
     "SFR": {"2G": true, "3G": true, "4G": true},
-    "Bouygues": {"2G": false, "3G": false, "4G": false},
+    "Bouygues": {"2G": true, "3G": false, "4G": false},
     "Free": {"2G": false, "3G": true, "4G": true}
 }
 ```
@@ -155,6 +157,25 @@ GET http://127.0.0.1:8000/api/coverage/?q=42+Rue+Pétion+75011+Paris
 }
 ```
 
+## Database Model
+
+This model represents a record of network coverage data by operator and includes:
+
+- **operator** (string): The operator name (e.g., Orange, SFR, etc.)
+- **longitude** (float): GPS longitude in WGS84 coordinates.
+- **latitude** (float): GPS latitude in WGS84 coordinates.
+- **g2** (boolean): Indicates 2G coverage availability.
+- **g3** (boolean): Indicates 3G coverage availability.
+- **g4** (boolean): Indicates 4G coverage availability.
+
+The network coverage data from the given csv [file](2018_01_Sites_mobiles_2G_3G_4G_France_metropolitaine_L93.csv) was processed (the coordinates were converted from Lambert 93 to WGS84 using [PyProj](https://pypi.org/project/pyproj/)) and added to the database through the command:
+
+```
+python manage.py import_network_coverage
+```
+
+You can find the command script in the file [import_network_coverage.py](network_api\management\commands\import_network_coverage.py).
+
 ## Testing
 
 The project includes a set of unit tests to ensure the functionality of the API. To run the tests:
@@ -163,27 +184,31 @@ The project includes a set of unit tests to ensure the functionality of the API.
 python manage.py test
 ```
 
-Test Cases Include:
+#### Test Cases Include:
 
-- Valid address queries.
-- Invalid address queries.
-- Queries with missing parameters.
-- Edge cases with special characters and common street names.
+- **Valid address queries**: Tests that verify API responses for addresses that should return network coverage data, including specific mobile operators.
+
+- **Invalid address queries**: Tests for addresses that do not exist or cannot be resolved, expecting error messages.
+- **Queries with missing parameters**: Tests where the required query parameter `q` is missing, expecting a 400 error.
+- **Edge cases**:
+  - **Special characters in addresses**: Tests for addresses with special characters, ensuring they are handled correctly.
+  - **Common street names**: Tests for common or ambiguous street names, checking if multiple or the correct results are returned.
+- **Invalid URL access**: Tests for requests to non-existent endpoints, expecting a 404 error.
 
 ## Error Handling
 
-The API handles various error scenarios, including:
+The API includes error handling for various scenarios and utilizes logging to track errors and debug information. Errors handled include:
 
-- Missing query parameters.
-- No valid addresses found.
-- Connection errors with the external address API.
-- Timeout errors when requesting the external address API.
+- **Missing query parameters**: If the address query parameter `q` is missing, the API responds with a 400 error.
+- **No valid addresses found**: When no matching addresses are found for a given query, a 404 error is returned.
+- **Connection errors with the external address API**: If the address API cannot be reached, a 503 error is returned.
+- **Timeout errors**: If the address API does not respond in time, a 504 error is returned.
+- **Other exceptions**: Any unexpected exceptions during API calls are logged and return a 500 error to the client.
 
 ## Additional Notes
 
 - Please ensure that you have the necessary permissions and API access when deploying the application.
-- The CSV file processed used for network coverage data should be in the root directory as [processed_network_coverage.csv](processed_network_coverage.csv).
-- The initial CSV file can be processed using the included script to convert the coordinates from Lambert 93 to WGS84 format if necessary. [process_csv.py](process_csv.py)
+- The CSV file used for network coverage data should be in the root directory as [2018_01_Sites_mobiles_2G_3G_4G_France_metropolitaine_L93.csv](2018_01_Sites_mobiles_2G_3G_4G_France_metropolitaine_L93.csv).
 
 ## Author
 

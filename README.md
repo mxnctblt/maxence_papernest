@@ -174,7 +174,7 @@ The network coverage data from the given csv [file](2018_01_Sites_mobiles_2G_3G_
 python manage.py import_network_coverage
 ```
 
-You can find the command script in the file [import_network_coverage.py](network_api\management\commands\import_network_coverage.py).
+You can find the command script in the file [import_network_coverage.py](.network_api\management\commands\import_network_coverage.py).
 
 ## Testing
 
